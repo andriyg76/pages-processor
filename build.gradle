@@ -1,0 +1,30 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.4.32"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id 'java'
+}
+
+group 'ee.andriyg.os'
+version '0.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "com.github.jknack:handlebars:4.2.0"
+    compile "org.slf4j:slf4j-simple:1.7.30"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.8"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
