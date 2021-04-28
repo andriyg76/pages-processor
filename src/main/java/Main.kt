@@ -51,7 +51,7 @@ object Main {
 
     private val pagesDir by lazy {
         Paths.get(System.getProperty("user.dir"))
-            .resolve("pages/data").resolve("pages")
+            .resolve("pages")
     }
 
     private fun renderFile(file: File) {
