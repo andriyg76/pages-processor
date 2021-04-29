@@ -42,5 +42,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: 'build/libs/pages-processor-*-all.jar'
+          args: 'build/libs/pages-processor-*.jar'
 
