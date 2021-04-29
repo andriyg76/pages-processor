@@ -1,23 +1,23 @@
+package eu.andriyg.os.pp
+
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.jknack.handlebars.Context
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.Template
 import com.github.jknack.handlebars.io.FileTemplateLoader
-import com.github.jknack.handlebars.io.TemplateLoader
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
-object Main {
+class Processor(var outputPath: String) {
+
     private val handlebars: Handlebars by lazy {
         Handlebars(
             FileTemplateLoader(
-                Paths.get(System.getProperty("user.dir"))
-                    .resolve(".processor/templates").toFile()
+                Paths.get(".").resolve(".processor/templates").toFile()
             )
         )
     }
@@ -29,20 +29,21 @@ object Main {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @JvmStatic
-    fun main(vararg args: String) {
-        logger.info("Hello from $this")
-
-        val dataDir = Paths.get(System.getProperty("user.dir")).resolve("data")
+    fun process() {
+        val dataDir = Paths.get(".").resolve("data").toFile()
         logger.info("Navigating data directory: $dataDir")
 
         convertPath(dataDir)
     }
 
-    private fun convertPath(path: Path) {
+    private fun convertPath(path: File) {
         logger.info("Working with {} directory", path)
-        path.toFile().listFiles { it -> it.isFile }?.forEach { renderFile(file = it) }
-        path.toFile().listFiles { it -> it.isDirectory }?.forEach { convertPath(it.toPath()) }
+        if (!path.exists() || !path.isDirectory) {
+            logger.error("Path {} is not exist or it is not directory", path)
+            return
+        }
+        path.listFiles { it -> it.isFile }?.forEach { renderFile(file = it) }
+        path.listFiles { it -> it.isDirectory }?.forEach { convertPath(it) }
     }
 
     private val objectMapper by lazy {
@@ -50,8 +51,7 @@ object Main {
     }
 
     private val pagesDir by lazy {
-        Paths.get(System.getProperty("user.dir"))
-            .resolve("pages")
+        Paths.get("pages")
     }
 
     private fun renderFile(file: File) {
@@ -80,6 +80,4 @@ object Main {
             getTemplate(template).apply(Context.newContext(map), it)
         }
     }
-
-
 }
