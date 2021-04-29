@@ -6,7 +6,6 @@ plugins {
 }
 
 group 'ee.andriyg.os'
-version '0.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
