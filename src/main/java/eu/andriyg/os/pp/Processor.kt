@@ -51,7 +51,7 @@ class Processor(var outputPath: String) {
     }
 
     private val pagesDir by lazy {
-        Paths.get("pages")
+        Paths.get(outputPath).resolve("pages")
     }
 
     private fun renderFile(file: File) {
