@@ -32,6 +32,9 @@ jobs:
         run: chmod +x gradlew
         
       - name: Build with Gradle
+        env:
+          GITHUB_USERNAME: x-access-token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew shadowJar publish --info
 
       - name: Upload the artifacts
