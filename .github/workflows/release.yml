@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
         
       - name: Build with Gradle
-        run: ./gradlew shadowJar
+        run: ./gradlew shadowJar publish --info
 
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
