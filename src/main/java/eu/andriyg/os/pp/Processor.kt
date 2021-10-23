@@ -11,6 +11,7 @@ import java.io.File
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.exists
 
 class Processor(var outputPath: String) {
 
@@ -30,20 +31,45 @@ class Processor(var outputPath: String) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun process() {
+        val sharedPath = Paths.get(".").resolve("shared")
+        val shared: Map<String, Any>
+        if (!sharedPath.exists()) {
+            logger.info("Shared path is not found, ignoring loading")
+            shared = emptyMap()
+        } else {
+            shared = loadShared(sharedPath.toFile())
+        }
         val dataDir = Paths.get(".").resolve("data").toFile()
         logger.info("Navigating data directory: $dataDir")
 
-        convertPath(dataDir)
+        convertPath(dataDir, shared)
     }
 
-    private fun convertPath(path: File) {
+    private fun loadShared(path: File): Map<String, Any> {
+        logger.info("Loading shared from {}", path)
+
+        var shared = emptyMap<String, Any>()
+        path.listFiles { it -> it.isFile }?.forEach { shared += prefix(it.name) to loadJson(it) }
+        path.listFiles{ it -> it.isDirectory }?.forEach { shared += it.name to loadShared(it) }
+        return shared
+    }
+
+    private fun prefix(name: String): String {
+        return name.split('.')[0]
+    }
+
+    private fun loadJson(file: File): Any {
+        return objectMapper.readValue(file, MutableMap::class.java)
+    }
+
+    private fun convertPath(path: File, shared: Map<String, Any>) {
         logger.info("Working with {} directory", path)
         if (!path.exists() || !path.isDirectory) {
             logger.error("Path {} is not exist or it is not directory", path)
             return
         }
-        path.listFiles { it -> it.isFile }?.forEach { renderFile(file = it) }
-        path.listFiles { it -> it.isDirectory }?.forEach { convertPath(it) }
+        path.listFiles { it -> it.isFile }?.forEach { renderFile(file = it, shared = shared) }
+        path.listFiles { it -> it.isDirectory }?.forEach { convertPath(it, shared) }
     }
 
     private val objectMapper by lazy {
@@ -54,14 +80,15 @@ class Processor(var outputPath: String) {
         Paths.get(outputPath)
     }
 
-    private fun renderFile(file: File) {
+    private fun renderFile(file: File, shared: Map<String, Any>) {
         logger.info("Rendering file {}", file)
-        val map = objectMapper.readValue(file, MutableMap::class.java)
+        val map = objectMapper.readValue(file, MutableMap::class.java) as MutableMap<String, Any>
         if (!map.containsKey("_page") || map["_page"] !is Map<*, *>) {
             logger.warn("File {} does not contain _page directory", file)
             return
         }
 
+        map["_shared"] = shared
         val _page = map["_page"] as Map<*, *>
         val template = _page["template"].toString()
         var output: String = _page["output"]?.toString() ?: run {
