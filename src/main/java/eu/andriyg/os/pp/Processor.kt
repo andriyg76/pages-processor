@@ -2,6 +2,8 @@ package eu.andriyg.os.pp
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.toml.TomlFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.jknack.handlebars.Context
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.Template
@@ -49,7 +51,12 @@ class Processor(var outputPath: String) {
         logger.info("Loading shared from {}", path)
 
         var shared = emptyMap<String, Any>()
-        path.listFiles { it -> it.isFile }?.forEach { shared += prefix(it.name) to loadJson(it) }
+        path.listFiles { it -> it.isFile }?.forEach {
+            val prefix = prefix(it.name)
+            loadFile(it)?.let {
+                shared += prefix to it
+            }
+        }
         path.listFiles{ it -> it.isDirectory }?.forEach { shared += it.name to loadShared(it) }
         return shared
     }
@@ -58,8 +65,29 @@ class Processor(var outputPath: String) {
         return name.split('.')[0]
     }
 
-    private fun loadJson(file: File): Any {
-        return objectMapper.readValue(file, MutableMap::class.java)
+    private fun loadFile(file: File): MutableMap<String, Any?>? {
+        if (file.name.endsWith(".json") || file.name.endsWith(".json5")) {
+            return loadJson(file)
+        } else if (file.name.endsWith(".yaml") || file.name.endsWith(".yml")) {
+            return loadYaml(file)
+        } else if (file.name.endsWith(".toml")) {
+            return loadToml(file)
+        } else {
+            logger.warn("Unknown file type {}", file)
+            return null
+        }
+    }
+
+    private fun loadToml(file: File): MutableMap<String, Any?>? {
+        return toml.readValue(file, MutableMap::class.java) as MutableMap<String, Any?>
+    }
+
+    private fun loadYaml(file: File): MutableMap<String, Any?>? {
+        return yaml.readValue(file, MutableMap::class.java) as MutableMap<String, Any?>
+    }
+
+    private fun loadJson(file: File): MutableMap<String, Any?> {
+        return objectMapper.readValue(file, MutableMap::class.java) as MutableMap<String, Any?>
     }
 
     private fun convertPath(path: File, shared: Map<String, Any>) {
@@ -76,13 +104,21 @@ class Processor(var outputPath: String) {
         ObjectMapper().enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
     }
 
+    private val toml by lazy {
+        ObjectMapper(TomlFactory())
+    }
+
+    private val yaml by lazy {
+        ObjectMapper(YAMLFactory())
+    }
+
     private val pagesDir by lazy {
         Paths.get(outputPath)
     }
 
     private fun renderFile(file: File, shared: Map<String, Any>) {
         logger.info("Rendering file {}", file)
-        val map = objectMapper.readValue(file, MutableMap::class.java) as MutableMap<String, Any>
+        val map = loadFile(file) ?: return
         if (!map.containsKey("_page") || map["_page"] !is Map<*, *>) {
             logger.warn("File {} does not contain _page directory", file)
             return
