@@ -88,5 +88,5 @@ jobs:
 
       - name: Build and push Docker imag
         run: TAG=andriyg/pages-processor:${{ env.DOCKER_TAG }} &&
-          GITHUB_TAG=ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }} &&
+          GITHUB_TAG=ghcr.io/${{ github.repository }} &&
           docker buildx build --platform linux/amd64 . --file Dockerfile --tag $TAG  --tag $GITHUB_TAG --push

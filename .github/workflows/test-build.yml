@@ -77,6 +77,6 @@ jobs:
         echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
 
     - name: Build and push Docker imag
-      run: TAG=andriyg76/pages-processor:${{ env.DOCKER_TAG }} &&
-        GITHUB_TAG=ghcr.io/${{ github.repository }} &&
+      run: TAG=andriyg/pages-processor:${{ env.DOCKER_TAG }} &&
+          GITHUB_TAG=ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }} &&
         docker buildx build --platform linux/amd64 . --file Dockerfile --tag $TAG  --tag $GITHUB_TAG --push
