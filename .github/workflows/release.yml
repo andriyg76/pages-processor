@@ -37,6 +37,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew shadowJar publish --info
 
+      - name: Upload the artifacts
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'build/libs/pages-processor-*.jar'
+
       - name: Set default docker tag label
         run: echo "DOCKER_TAG=latest" >> $GITHUB_ENV
 
