@@ -44,6 +44,13 @@ jobs:
         with:
           args: 'build/libs/pages-processor-*.jar'
 
+      - name: Set default docker tag label
+        run: echo "DOCKER_TAG=latest" >> $GITHUB_ENV
+
+      - name: Set docker tag label for git branches
+        if: startsWith(github.ref, 'refs/heads/')
+        run: echo "DOCKER_TAG=$( echo $GITHUB_REF | cut -d / -f 3- )" >> $GITHUB_ENV
+
       - name: Set docker tag label for git tags
         if: startsWith(github.ref, 'refs/tags/')
         run: echo "DOCKER_TAG=$( echo $GITHUB_REF | cut -d / -f 3- )" >> $GITHUB_ENV
@@ -80,6 +87,6 @@ jobs:
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
 
       - name: Build and push Docker imag
-        run: TAG=andriyg76/pages-processor:${{ env.DOCKER_TAG }} &&
+        run: TAG=andriyg/pages-processor:${{ env.DOCKER_TAG }} &&
           GITHUB_TAG=ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }} &&
           docker buildx build --platform linux/amd64 . --file Dockerfile --tag $TAG  --tag $GITHUB_TAG --push
