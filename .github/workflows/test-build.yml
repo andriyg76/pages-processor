@@ -34,6 +34,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: ./gradlew test shadowJar publish --info
 
+    - name: Set default docker tag label
+      run: echo "DOCKER_TAG=latest" >> $GITHUB_ENV
+
+    - name: Set docker tag label for git branches
+      if: startsWith(github.ref, 'refs/heads/')
+      run: echo "DOCKER_TAG=$( echo $GITHUB_REF | cut -d / -f 3- )" >> $GITHUB_ENV
+
     - name: Set docker tag label for git tags
       if: startsWith(github.ref, 'refs/tags/')
       run: echo "DOCKER_TAG=$( echo $GITHUB_REF | cut -d / -f 3- )" >> $GITHUB_ENV
